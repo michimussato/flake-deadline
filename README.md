@@ -119,3 +119,13 @@ $ ldd /data/share/tools/.stage/test/bin/python3/python3
         /lib64/ld-linux-x86-64.so.2 => /nix/store/r3hvhzl5fxhrgn0rfy5g7rda17702pj4-glibc-2.44-57/lib64/ld-linux-x86-64.so.2 (0x00007ffff7fc0000)
         libcrypt.so.1 => not found
 ```
+
+```
+The authenticity of host 'github.com (4.163.8.144)' can't be established.
+ED25519 key fingerprint is: SHA256:+DiY3wvvV6TuJJhbpZisF/zLDA0zPMSvHdkr4UvCOqU
+```
+
+```shell
+nix-shell
+deadlinemonitor.exe
+```
