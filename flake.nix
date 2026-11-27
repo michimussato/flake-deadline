@@ -11,7 +11,7 @@
 
     # https://history.nix-packages.com/package/libffi/3.2.1
 #    nixpkgs-legacy.url = "github:nixos/nixpkgs/nixos-21.05";
-    nixpkgs-legacy.url = "github:NixOS/nixpkgs/9888686702533cf29d1e5dcd26f4d885d5dedb96";
+#    nixpkgs-legacy.url = "github:NixOS/nixpkgs/9888686702533cf29d1e5dcd26f4d885d5dedb96";
     # https://github.com/NixOS/nixpkgs/tree/9888686702533cf29d1e5dcd26f4d885d5dedb96
 
   };
@@ -19,13 +19,20 @@
   outputs = {
     self,
     nixpkgs,
-    nixpkgs-legacy,
     ...
   }:
 
   let
     pkgs = import nixpkgs { system = "x86_64-linux"; };
-    pkgs-legacy = import nixpkgs-legacy { system = "x86_64-linux"; };
+    # pkgs-legacy = import nixpkgs-legacy { system = "x86_64-linux"; };
+    src-nixpkgs-legacy = pkgs.fetchFromGitHub {
+      owner = "NixOS";
+      repo = "nixpkgs";
+      rev = "9888686702533cf29d1e5dcd26f4d885d5dedb96";
+      sha256 = "sha256-WDRA2yhKh19cViUaNfF6nmt60LkNOf2YPeJSkMrcv1U=";
+    };
+    pkgs-legacy = import src-nixpkgs-legacy { system = "x86_64-linux"; };
+    # pkgs-legacy = import (builtins.fetchTarball https://github.com/nixos/nixpkgs/tarball/9888686702533cf29d1e5dcd26f4d885d5dedb96) { system = "x86_64-linux"; };
 
 #    libffi6 = pkgs-legacy.libffi;
 
@@ -77,6 +84,7 @@
       # libxcrypt
       libxcrypt-legacy
       # pkgs-legacy.libffi
+      pkgs-legacy.libffi
 #      libmcrypt
       # steam-run
 
@@ -138,20 +146,22 @@
 
     fhs = pkgs.buildFHSEnv {
       name = "fhs-deadline";
-
       targetPkgs = pkgs: (pkgs-deps-deadline);
-#        pkgs: with pkgs; [];
-
       runScript = "bash";
     };
+
   in {
-    devShells.x86_64-linux = {
-      default = pkgs.mkShell {
+    devShells.x86_64-linux = rec {
+
+      default = deadline;
+
+      deadline = pkgs.mkShell {
         packages = [
           fhs
         ];
 
         shellHook = ''
+          export FHS=1
           echo "Run: fhs-deadline"
           echo "Run: /data/share/tools/.stage/test/bin/deadlinelauncher.exe -monitor"
           # /home/michael/Thinkbox/Deadline10/
@@ -167,12 +177,12 @@
           export LD_DEBUG_OUTPUT="$HOME/.temp/Deadline/ld_debug/debug.log"
           # mkdir -p $HOME/.temp/Deadline/ld_debug
 
-#          export QT_PLUGIN_PATH="/data/share/tools/.stage/test/lib/python3/lib/platforms:/data/share/tools/.stage/test/lib/platforms"
+          # export QT_PLUGIN_PATH="/data/share/tools/.stage/test/lib/python3/lib/platforms:/data/share/tools/.stage/test/lib/platforms"
           export QT_QPA_PLATFORM_PLUGIN_PATH="/data/share/tools/.stage/test/lib/python3/lib/platforms"
           # qt.qpa.plugin: Could not find the Qt platform plugin "wayland" in "/data/share/tools/.stage/test/lib/python3/lib/platforms"
 
-#          export QT_PLUGIN_PATH="/data/share/tools/.stage/test/lib/python3/lib/platforms:/data/share/tools/.stage/test/lib/platforms"
-#          export QT_QPA_PLATFORM_PLUGIN_PATH="/data/share/tools/.stage/test/lib/python3/lib/platforms:/data/share/tools/.stage/test/lib/platforms"
+          # export QT_PLUGIN_PATH="/data/share/tools/.stage/test/lib/python3/lib/platforms:/data/share/tools/.stage/test/lib/platforms"
+          # export QT_QPA_PLATFORM_PLUGIN_PATH="/data/share/tools/.stage/test/lib/python3/lib/platforms:/data/share/tools/.stage/test/lib/platforms"
 
           PATH="$DEADLINE_PATH:$PATH"
 
@@ -182,11 +192,8 @@
           # find /data/share/tools/.stage/test -name "libpython3.7m*" 2>/dev/null
           export LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [
             pkgs.wayland
-            # pkgs.libxcrypt
             pkgs.libxcrypt-legacy
-#            pkgs.libffi
             pkgs-legacy.libffi
-          # ]}:/data/share/tools/.stage/test/bin/:/data/share/tools/.stage/test/bin/python/:/data/share/tools/.stage/test/lib/python3/lib/:/data/share/tools/.stage/test/lib/python3/lib/:/data/share/tools/.stage/test/lib/python3/lib/python3.7/config-3.7m-x86_64-linux-gnu/:/data/share/tools/.stage/test/bin/
           ]}:/data/share/tools/.stage/test/lib/python3/lib
 
           # export QT_DEBUG_PLUGINS=1
