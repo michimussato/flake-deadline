@@ -8,9 +8,7 @@
 
 let
   base = pkgs.appimageTools.defaultFhsEnvArgs;
-
-  custom = import (builtins.fetchTarball https://github.com/nixos/nixpkgs/tarball/9888686702533cf29d1e5dcd26f4d885d5dedb96) {};
-
+  pkgs-legacy = import (builtins.fetchTarball https://github.com/nixos/nixpkgs/tarball/9888686702533cf29d1e5dcd26f4d885d5dedb96) {};
 in
 
   (pkgs.buildFHSEnv (base //
@@ -25,7 +23,7 @@ in
     (base.targetPkgs pkgs) ++ (with pkgs; [
       pkg-config
       ncurses
-      custom.libffi
+      pkgs-legacy.libffi
       # Feel free to add more packages here if needed.
       # foo
 
@@ -148,7 +146,7 @@ in
     export LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [
       pkgs.wayland
       pkgs.libxcrypt-legacy
-      custom.libffi
+      pkgs-legacy.libffi
     ]}:/data/share/tools/.stage/test/lib/python3/lib
 
     # export QT_DEBUG_PLUGINS=1
