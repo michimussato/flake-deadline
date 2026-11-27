@@ -42,7 +42,7 @@
       # Deadline 10.2
       version = "10.2.1.1";
       version-dashed = builtins.replaceStrings ["."] ["-"] version;
-      path = "/data/share/tools/.stage/test";
+      path = "/data/share/tools/deadline-10-2";
 
 #      pkgs = import nixpkgs { system = "x86_64-linux"; };
 
