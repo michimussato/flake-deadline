@@ -6,13 +6,7 @@
   '';
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-
-
-    # https://history.nix-packages.com/package/libffi/3.2.1
-#    nixpkgs-legacy.url = "github:nixos/nixpkgs/nixos-21.05";
-#    nixpkgs-legacy.url = "github:NixOS/nixpkgs/9888686702533cf29d1e5dcd26f4d885d5dedb96";
-    # https://github.com/NixOS/nixpkgs/tree/9888686702533cf29d1e5dcd26f4d885d5dedb96
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
 
   };
 
@@ -23,8 +17,17 @@
   }:
 
   let
+
+    # Deadline 10.2
+    version = "10.2.1.1";
+    version-dashed = builtins.replaceStrings ["."] ["-"] version;
+    path = "/data/share/tools/.stage/test";
+
     pkgs = import nixpkgs { system = "x86_64-linux"; };
-    # pkgs-legacy = import nixpkgs-legacy { system = "x86_64-linux"; };
+
+    # We need libffi.6
+    # - https://history.nix-packages.com/package/libffi/3.2.1
+    # - https://github.com/NixOS/nixpkgs/tree/9888686702533cf29d1e5dcd26f4d885d5dedb96
     src-nixpkgs-legacy = pkgs.fetchFromGitHub {
       owner = "NixOS";
       repo = "nixpkgs";
@@ -32,9 +35,8 @@
       sha256 = "sha256-WDRA2yhKh19cViUaNfF6nmt60LkNOf2YPeJSkMrcv1U=";
     };
     pkgs-legacy = import src-nixpkgs-legacy { system = "x86_64-linux"; };
-    # pkgs-legacy = import (builtins.fetchTarball https://github.com/nixos/nixpkgs/tarball/9888686702533cf29d1e5dcd26f4d885d5dedb96) { system = "x86_64-linux"; };
 
-#    libffi6 = pkgs-legacy.libffi;
+    pkgs-core = with pkgs; [];
 
     pkgs-base = with pkgs; [
       udev
@@ -51,11 +53,6 @@
       egl-wayland
     ];
 
-#    # Blender 4.4.3
-#    version = "4.4.3";
-#    version-dashed = builtins.replaceStrings ["."] ["-"] version;
-#    path = "/data/share/tools/blender-${version}-linux-x64";
-#    # # Deps
     pkgs-deps-deadline = with pkgs; [
       libxxf86vm
       libdecor
@@ -80,67 +77,53 @@
       zstd
       dbus
       libc
-#      libgcrypt
-      # libxcrypt
       libxcrypt-legacy
-      # pkgs-legacy.libffi
       pkgs-legacy.libffi
-#      libmcrypt
-      # steam-run
 
-        bash
-        ncurses5
-        xmessage
-        curl
+      bash
+      ncurses5
+      xmessage
+      curl
 
-        libGLU
-        libGL
-        alsa-lib
-        fontconfig
-        zlib
-        libpng
-        dbus
-        nss
-        nspr
-        expat
-        pciutils
-        libxkbcommon
-        libudev0-shim
-        tbb
-        xwayland
-        qt5.qtwayland
-        qt5.qtbase
-        nettools  # needed by licensing tools
-        bintools  # needed for ld and other tools, so ctypes can find/load sos from python
-        ocl-icd  # needed for opencl
-        numactl  # needed by hfs ocl backend
-        zstd  # needed from 20.0
+      libGLU
+      fontconfig
+      zlib
+      libpng
+      dbus
+      nss
+      nspr
+      expat
+      pciutils
+      libudev0-shim
+      tbb
+      xwayland
+      qt5.qtwayland
+      qt5.qtbase
+      nettools  # needed by licensing tools
+      bintools  # needed for ld and other tools, so ctypes can find/load sos from python
+      ocl-icd  # needed for opencl
+      numactl  # needed by hfs ocl backend
+      zstd  # needed from 20.0
 
-        libice
-        libsm
-        libxmu
-        libxi
-        libxext
-        libx11
-        libxrender
-        libxcursor
-        libxfixes
-        libxcomposite
-        libxdamage
-        libxtst
-        libxcb
-        libxscrnsaver
-        libxrandr
-        libxcb-util
-        libxcb-image
-        libxcb-render-util
-        libxcb-cursor
-        libxcb-keysyms
-        libxcb-wm
+      libxmu
+      libxext
+      libxcursor
+      libxcomposite
+      libxdamage
+      libxtst
+      libxcb
+      libxscrnsaver
+      libxrandr
+      libxcb-util
+      libxcb-image
+      libxcb-render-util
+      libxcb-cursor
+      libxcb-keysyms
+      libxcb-wm
 
-        libdrm
-        libxshmfence
-        libxkbfile
+      libdrm
+      libxshmfence
+      libxkbfile
 
     ] ++ pkgs-base;
 
@@ -162,13 +145,11 @@
 
         shellHook = ''
           export FHS=1
-          echo "Run: fhs-deadline"
-          echo "Run: /data/share/tools/.stage/test/bin/deadlinelauncher.exe -monitor"
           # /home/michael/Thinkbox/Deadline10/
           # https://docs.thinkboxsoftware.com/products/deadline/10.2/1_User%20Manual/manual/deploy-client-centrally-managed.html?highlight=environment%20variables#deploy-client-env-vars-ref-label
           # https://docs.thinkboxsoftware.com/products/deadline/10.2/1_User%20Manual/manual/worker.html#worker-local-data-storage-ref-label
 
-          export DEADLINE_PATH="/data/share/tools/.stage/test/bin"
+          export DEADLINE_PATH="${path}/bin"
           export DEADLINE_SYSTEM_PATH="$HOME/.temp/Deadline/var/lib/Thinkbox"
           export DEADLINE_LOG_PATH="$HOME/.temp/Deadline/var/log/Thinkbox"
           export DEADLINE_CONFIG_FILE="/home/michael/git/repos/flake-deadline/deadline.ini"
@@ -177,28 +158,34 @@
           export LD_DEBUG_OUTPUT="$HOME/.temp/Deadline/ld_debug/debug.log"
           # mkdir -p $HOME/.temp/Deadline/ld_debug
 
-          # export QT_PLUGIN_PATH="/data/share/tools/.stage/test/lib/python3/lib/platforms:/data/share/tools/.stage/test/lib/platforms"
-          export QT_QPA_PLATFORM_PLUGIN_PATH="/data/share/tools/.stage/test/lib/python3/lib/platforms"
-          # qt.qpa.plugin: Could not find the Qt platform plugin "wayland" in "/data/share/tools/.stage/test/lib/python3/lib/platforms"
+          # export QT_PLUGIN_PATH="${path}/lib/python3/lib/platforms:${path}/lib/platforms"
+          export QT_QPA_PLATFORM_PLUGIN_PATH="${path}/lib/python3/lib/platforms"
+          # qt.qpa.plugin: Could not find the Qt platform plugin "wayland" in "${path}/lib/python3/lib/platforms"
 
-          # export QT_PLUGIN_PATH="/data/share/tools/.stage/test/lib/python3/lib/platforms:/data/share/tools/.stage/test/lib/platforms"
-          # export QT_QPA_PLATFORM_PLUGIN_PATH="/data/share/tools/.stage/test/lib/python3/lib/platforms:/data/share/tools/.stage/test/lib/platforms"
+          # export QT_PLUGIN_PATH="${path}/lib/python3/lib/platforms:${path}/lib/platforms"
+          # export QT_QPA_PLATFORM_PLUGIN_PATH="${path}/lib/python3/lib/platforms:${path}/lib/platforms"
 
           PATH="$DEADLINE_PATH:$PATH"
 
-          # ln -sfn ${pkgs.libxcrypt}/lib/libcrypt.so.2.0.0 /data/share/tools/.stage/test/mylib/libcrypt.so.1.0.0
-          # /data/share/tools/.stage/test/bin/python3/python3
+          # ln -sfn ${pkgs.libxcrypt}/lib/libcrypt.so.2.0.0 ${path}/mylib/libcrypt.so.1.0.0
+          # ${path}/bin/python3/python3
 
-          # find /data/share/tools/.stage/test -name "libpython3.7m*" 2>/dev/null
+          # find ${path} -name "libpython3.7m*" 2>/dev/null
           export LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [
             pkgs.wayland
             pkgs.libxcrypt-legacy
             pkgs-legacy.libffi
-          ]}:/data/share/tools/.stage/test/lib/python3/lib
+          ]}:${path}/lib/python3/lib
 
           # export QT_DEBUG_PLUGINS=1
 
-          export PYTHONHOME="/data/share/tools/.stage/test/lib/python3"
+          export PYTHONHOME="${path}/lib/python3"
+
+          echo "Run: fhs-deadline"
+          # echo "Run: ${path}/bin/deadlinelauncher.exe -monitor"
+
+          echo "Available commands:"
+          echo $(find ${path}/bin -maxdepth 1 -type f -executable -iname "*.exe" -printf "%f\n" | sort)
         '';
       };
 
