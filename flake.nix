@@ -36,100 +36,107 @@
     };
     pkgs-legacy = import src-nixpkgs-legacy { system = "x86_64-linux"; };
 
-    pkgs-core = with pkgs; [];
+    pkgs-nogui = with pkgs; [
+      zlib
+    ];
 
-    pkgs-base = with pkgs; [
-      udev
-      alsa-lib
+    pkgs-gui = with pkgs; [
+#      udev
+#      alsa-lib
       libX11
       libXrender
-      libXfixes
-      libXi
-      libxkbcommon
+#      libXfixes
+#      libXi
+#      libxkbcommon
       libSM
       libICE
       libGL
-      wayland
-      egl-wayland
-    ];
+#      wayland
+#      egl-wayland
 
-    pkgs-deps-deadline = with pkgs; [
-      libxxf86vm
-      libdecor
+
+#      libxxf86vm
+#      libdecor
 
       ## For Ayon Launcher
-      glib
+#      glib
       fontconfig
-      freetype
-      xwayland
-      qt5.qtwayland
-      qt6.qtwayland
-      libxext
-      libxcb
-      libxcb-image
-      libxcb-render-util
-      libxcb-cursor
-      libxcb-keysyms
-      libxcb-wm
+#      freetype
+#      xwayland
+#      qt5.qtwayland
+#      qt6.qtwayland
+#      libxext
+#      libxcb
+#      libxcb-image
+#      libxcb-render-util
+#      libxcb-cursor
+#      libxcb-keysyms
+#      libxcb-wm
 
       # testing manual command
       zlib
-      zstd
-      dbus
-      libc
+#      zstd
+#      dbus
+#      libc
       libxcrypt-legacy
       pkgs-legacy.libffi
 
-      bash
-      ncurses5
-      xmessage
-      curl
+#      bash
+#      ncurses5
+#      xmessage
+#      curl
 
-      libGLU
-      fontconfig
-      zlib
-      libpng
-      dbus
-      nss
-      nspr
-      expat
-      pciutils
-      libudev0-shim
-      tbb
-      xwayland
-      qt5.qtwayland
-      qt5.qtbase
-      nettools  # needed by licensing tools
-      bintools  # needed for ld and other tools, so ctypes can find/load sos from python
-      ocl-icd  # needed for opencl
-      numactl  # needed by hfs ocl backend
-      zstd  # needed from 20.0
+#      libGLU
+#      fontconfig
+#      zlib
+#      libpng
+#      dbus
+#      nss
+#      nspr
+#      expat
+#      pciutils
+#      libudev0-shim
+#      tbb
+#      xwayland
+#      qt5.qtwayland
+#      qt5.qtbase
+#      nettools  # needed by licensing tools
+#      bintools  # needed for ld and other tools, so ctypes can find/load sos from python
+#      ocl-icd  # needed for opencl
+#      numactl  # needed by hfs ocl backend
+#      zstd  # needed from 20.0
 
-      libxmu
-      libxext
-      libxcursor
-      libxcomposite
-      libxdamage
-      libxtst
-      libxcb
-      libxscrnsaver
-      libxrandr
-      libxcb-util
-      libxcb-image
-      libxcb-render-util
-      libxcb-cursor
-      libxcb-keysyms
-      libxcb-wm
+#      libxmu
+#      libxext
+#      libxcursor
+#      libxcomposite
+#      libxdamage
+#      libxtst
+#      libxcb
+#      libxscrnsaver
+#      libxrandr
+#      libxcb-util
+#      libxcb-image
+#      libxcb-render-util
+#      libxcb-cursor
+#      libxcb-keysyms
+#      libxcb-wm
 
-      libdrm
-      libxshmfence
-      libxkbfile
+#      libdrm
+#      libxshmfence
+#      libxkbfile
 
-    ] ++ pkgs-base;
+    ] ++ pkgs-nogui;
+
+    fhs-nogui = pkgs.buildFHSEnv {
+      name = "fhs-deadline";
+      targetPkgs = pkgs: (pkgs-nogui);
+      runScript = "bash";
+    };
 
     fhs = pkgs.buildFHSEnv {
       name = "fhs-deadline";
-      targetPkgs = pkgs: (pkgs-deps-deadline);
+      targetPkgs = pkgs: (pkgs-gui);
       runScript = "bash";
     };
 
@@ -183,6 +190,41 @@
 
           echo "Run: fhs-deadline"
           # echo "Run: ${path}/bin/deadlinelauncher.exe -monitor"
+
+          echo "Available commands:"
+          echo $(find ${path}/bin -maxdepth 1 -type f -executable -iname "*.exe" -printf "%f\n" | sort)
+        '';
+      };
+
+      deadline-nogui = pkgs.mkShell {
+        packages = [
+          fhs-nogui
+        ];
+
+        shellHook = ''
+          export FHS=1
+
+          export DEADLINE_PATH="${path}/bin"
+          export DEADLINE_SYSTEM_PATH="$HOME/.temp/Deadline/var/lib/Thinkbox"
+          export DEADLINE_LOG_PATH="$HOME/.temp/Deadline/var/log/Thinkbox"
+          export DEADLINE_CONFIG_FILE="/home/michael/git/repos/flake-deadline/deadline.ini"
+
+          export LD_DEBUG=all
+          export LD_DEBUG_OUTPUT="$HOME/.temp/Deadline/ld_debug/debug.log"
+
+          export QT_QPA_PLATFORM_PLUGIN_PATH="${path}/lib/python3/lib/platforms"
+
+          PATH="$DEADLINE_PATH:$PATH"
+
+          export LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [
+            pkgs.wayland
+            pkgs.libxcrypt-legacy
+            pkgs-legacy.libffi
+          ]}:${path}/lib/python3/lib
+
+          export PYTHONHOME="${path}/lib/python3"
+
+          echo "Run: fhs-deadline"
 
           echo "Available commands:"
           echo $(find ${path}/bin -maxdepth 1 -type f -executable -iname "*.exe" -printf "%f\n" | sort)
