@@ -125,7 +125,40 @@ The authenticity of host 'github.com (4.163.8.144)' can't be established.
 ED25519 key fingerprint is: SHA256:+DiY3wvvV6TuJJhbpZisF/zLDA0zPMSvHdkr4UvCOqU
 ```
 
+# nix-shell
+
 ```shell
 nix-shell
 deadlinemonitor.exe
+```
+
+from `nix-shell` to `flake`
+- https://www.reddit.com/r/NixOS/comments/ss7twx/using_older_package_with_latest_nixpkgs/
+
+# nix flake
+
+```
+└───devShells
+    └───x86_64-linux
+        ├───deadline-gui: development environment 'nix-shell'
+        ├───deadline-nogui: development environment 'nix-shell'
+        └───default: development environment 'nix-shell'
+```
+
+## local
+
+```shell
+nix develop /home/michael/git/repos/flake-deadline#deadline-gui --command fhs-deadline
+```
+
+## remote
+
+```shell
+nix develop github:michimussato/flake-deadline#deadline-gui --command fhs-deadline
+```
+
+### Updates from Remote
+
+```shell
+nix flake update --flake github:michimussato/flake-deadline
 ```
