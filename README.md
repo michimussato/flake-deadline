@@ -82,10 +82,14 @@ fhs
 - Use the repository for auto update
 
 ```shell
+DST="/data/share/tools"
+STAGE="${DST}/.stage/deadline-10-2"
+mkdir -p "${STAGE}"
+
 ./DeadlineClient-10.2.1.1-linux-x64-installer.run \
     --mode text \
     --setpermissionsclient false \
-    --prefix /data/share/tools/.stage/test \
+    --prefix "${STAGE}" \
     --connectiontype Remote \
     --proxyrootdir deadline-rcs-runner-10-2.meemoo.lan:8888 \
     --slavedatadir "$HOME/.temp/Deadline/slavedatadir" \
@@ -94,26 +98,31 @@ fhs
 ```
 
 ```shell
-sudo chmod 0777 /data/share/tools/.stage/test/bin/libpython3.7m.so
-sudo chmod 0777 /data/share/tools/.stage/test/bin/plugins
-sudo chmod 0777 /data/share/tools/.stage/test/bin/libNativeThinkboxUI.so
-sudo chmod 0777 /data/share/tools/.stage/test/bin/libNodeView.so
-sudo chmod 0777 /data/share/tools/.stage/test/bin/python
-sudo chmod 0777 /data/share/tools/.stage/test/bin/lib
-sudo chmod 0777 /data/share/tools/.stage/test/bin/libQtCommercialChart.so.1
-sudo chmod 0777 /data/share/tools/.stage/test/bin/libpython2.7.so
-sudo chmod 0777 /data/share/tools/.stage/test/bin/python3/plugins
-sudo chmod 0777 /data/share/tools/.stage/test/bin/python3/libNativeThinkboxUI.so
-sudo chmod 0777 /data/share/tools/.stage/test/bin/python3/libNodeView.so
-sudo chmod 0777 /data/share/tools/.stage/test/bin/python3/libxkbcommon-x11.so.0
-sudo chmod 0777 /data/share/tools/.stage/test/bin/python3/libxkbcommon.so.0
-sudo chmod 0777 /data/share/tools/.stage/test/bin/python3/libQt5Charts.so.5
+sudo chmod 0777 ${STAGE}/bin/libpython3.7m.so
+sudo chmod 0777 ${STAGE}/bin/plugins
+sudo chmod 0777 ${STAGE}/bin/libNativeThinkboxUI.so
+sudo chmod 0777 ${STAGE}/bin/libNodeView.so
+sudo chmod 0777 ${STAGE}/bin/python
+sudo chmod 0777 ${STAGE}/bin/lib
+sudo chmod 0777 ${STAGE}/bin/libQtCommercialChart.so.1
+sudo chmod 0777 ${STAGE}/bin/libpython2.7.so
+sudo chmod 0777 ${STAGE}/bin/python3/plugins
+sudo chmod 0777 ${STAGE}/bin/python3/libNativeThinkboxUI.so
+sudo chmod 0777 ${STAGE}/bin/python3/libNodeView.so
+sudo chmod 0777 ${STAGE}/bin/python3/libxkbcommon-x11.so.0
+sudo chmod 0777 ${STAGE}/bin/python3/libxkbcommon.so.0
+sudo chmod 0777 ${STAGE}/bin/python3/libQt5Charts.so.5
 
-chmod -R 755 "/data/share/tools/.stage/test/Uninstall"*.desktop
+chmod -R 755 "${STAGE}/Uninstall"*.desktop
 ```
 
 ```shell
-/data/share/tools/.stage/test/bin/deadlinelauncher.exe -monitor
+# Simple verification
+command ${STAGE}/bin/deadlinelauncher.exe -version
+```
+
+```shell
+mv "${STAGE}" "${DST}"
 ```
 
 ```
@@ -149,23 +158,27 @@ from `nix-shell` to `flake`
 # nix flake
 
 ```
-└───devShells
+├───apps
+│   └───x86_64-linux
+│       └───deadline-gui-10-2-1-1-app: app: Launch Deadline 10.2.1.1 in gui mode
+├───devShells
+│   └───x86_64-linux
+│       └───deadline-gui-10-2-1-1-devshell: development environment 'deadline-gui-10-2-1-1-devshell'
+└───packages
     └───x86_64-linux
-        ├───deadline-gui: development environment 'nix-shell'
-        ├───deadline-nogui: development environment 'nix-shell'
-        └───default: development environment 'nix-shell'
+        └───deadline-gui-10-2-1-1-package: package 'fhs'
 ```
 
 ## local
 
 ```shell
-nix develop /home/michael/git/repos/flake-deadline#deadline-gui --command fhs-deadline
+nix run /home/michael/git/repos/flake-deadline#deadline-gui-10-2-1-1-app -- deadlinemonitor.exe -superuser true
 ```
 
 ## remote
 
 ```shell
-nix develop github:michimussato/flake-deadline#deadline-gui --command fhs-deadline
+nix run github:michimussato/flake-deadline#deadline-gui-10-2-1-1-app -- deadlinemonitor.exe -superuser true
 ```
 
 ### Updates from Remote
