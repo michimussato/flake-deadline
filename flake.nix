@@ -18,6 +18,33 @@
 
   let
 
+    # Tested
+    # - deadlinelauncher
+    # - deadlinemonitor
+    # - deadlineworker (=deadlineslave)
+    #   - [ ] qt.qpa.xcb: QXcbConnection: XCB error: 3 (BadWindow), sequence: 551, resource id: 31457286, major code: 4 (DestroyWindow), minor code: 0
+    # - deadlinepulse
+    #   - [ ] System.DllNotFoundException: Unable to load shared library 'python2.7' or one of its dependencies. In order to help diagnose loading problems, consider setting the LD_DEBUG environment variable: libpython2.7: cannot open shared object file: No such file or directory
+    #            at Python.Runtime.Runtime.Py_SetPythonHome(IntPtr home)
+    #            at Python.Runtime.PythonEngine.set_PythonHome(String value)
+    #            at FranticX.Scripting.PythonNetScriptEngine.Initialize(Boolean setUnbufferedStdioFlag, String home, String programName)
+    #         An error occurred while trying to initialize Deadline's Python Engine:
+    #         System.Exception: Attempted python home: /data/share/tools/.stage/test, Unable to load shared library 'python2.7' or one of its dependencies. In order to help diagnose loading problems, consider setting the LD_DEBUG environment variable: libpython2.7: cannot open shared object file: No such file or directory
+    #            at Deadline.Scripting.DeadlineScriptManager.a()
+    #            at Deadline.Scripting.DeadlineScriptManager..ctor(DataController aet, Boolean aeu, Boolean aev)
+    #            at Deadline.Scripting.DeadlineScriptManager.GetInstance(DataController dataController, Boolean redirectOutput, Boolean syncAPI)
+    #            at DeadlineBalancer.DeadlineBalancerApp.a(CommandLineParser d)
+    #         System.DllNotFoundException: Unable to load shared library 'python2.7' or one of its dependencies. In order to help diagnose loading problems, consider setting the LD_DEBUG environment variable: libpython2.7: cannot open shared object file: No such file or directory
+    #            at Python.Runtime.Runtime.Py_SetPythonHome(IntPtr home)
+    #            at Python.Runtime.PythonEngine.set_PythonHome(String value)
+    #            at FranticX.Scripting.PythonNetScriptEngine.Initialize(Boolean setUnbufferedStdioFlag, String home, String programName)
+    #         Exception on Startup: System.Exception: Attempted python home: /data/share/tools/.stage/test, Unable to load shared library 'python2.7' or one of its dependencies. In order to help diagnose loading problems, consider setting the LD_DEBUG environment variable: libpython2.7: cannot open shared object file: No such file or directory
+    #            at DeadlineBalancer.DeadlineBalancerApp.a(CommandLineParser d)
+    #            at DeadlineBalancer.DeadlineBalancerAppStartup.Main(String[] args)
+    #
+    #         Deadline Balancer will now exit.
+    # - deadlinewebservice
+
     # Deadline 10.2
     version = "10.2.1.1";
     version-dashed = builtins.replaceStrings ["."] ["-"] version;
@@ -41,91 +68,23 @@
     ];
 
     pkgs-gui = with pkgs; [
-#      udev
-#      alsa-lib
       libX11
       libXrender
-#      libXfixes
-#      libXi
-#      libxkbcommon
+      libXfixes
+      libxext
+      libxkbcommon
       libSM
       libICE
       libGL
-#      wayland
-#      egl-wayland
-
-
-#      libxxf86vm
-#      libdecor
-
-      ## For Ayon Launcher
-#      glib
       fontconfig
-#      freetype
-#      xwayland
-#      qt5.qtwayland
-#      qt6.qtwayland
-#      libxext
 #      libxcb
 #      libxcb-image
 #      libxcb-render-util
 #      libxcb-cursor
 #      libxcb-keysyms
 #      libxcb-wm
-
-      # testing manual command
-      zlib
-#      zstd
-#      dbus
-#      libc
       libxcrypt-legacy
       pkgs-legacy.libffi
-
-#      bash
-#      ncurses5
-#      xmessage
-#      curl
-
-#      libGLU
-#      fontconfig
-#      zlib
-#      libpng
-#      dbus
-#      nss
-#      nspr
-#      expat
-#      pciutils
-#      libudev0-shim
-#      tbb
-#      xwayland
-#      qt5.qtwayland
-#      qt5.qtbase
-#      nettools  # needed by licensing tools
-#      bintools  # needed for ld and other tools, so ctypes can find/load sos from python
-#      ocl-icd  # needed for opencl
-#      numactl  # needed by hfs ocl backend
-#      zstd  # needed from 20.0
-
-#      libxmu
-#      libxext
-#      libxcursor
-#      libxcomposite
-#      libxdamage
-#      libxtst
-#      libxcb
-#      libxscrnsaver
-#      libxrandr
-#      libxcb-util
-#      libxcb-image
-#      libxcb-render-util
-#      libxcb-cursor
-#      libxcb-keysyms
-#      libxcb-wm
-
-#      libdrm
-#      libxshmfence
-#      libxkbfile
-
     ] ++ pkgs-nogui;
 
     fhs-nogui = pkgs.buildFHSEnv {
@@ -143,9 +102,9 @@
   in {
     devShells.x86_64-linux = rec {
 
-      default = deadline;
+      default = deadline-gui;
 
-      deadline = pkgs.mkShell {
+      deadline-gui = pkgs.mkShell {
         packages = [
           fhs
         ];
